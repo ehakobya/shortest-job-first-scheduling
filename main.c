@@ -5,110 +5,113 @@
 int main(int argc, char *argv[]) {
 
     FILE *file;
-    char filename[] = "sample/data.txt";
+    char filename[] = "D:\\Git\\SJF-scheduling\\sample\\data.txt"; // File to read data from
 
-//    char filename[100];
+//    char filename[100]; // File to read data from
 //    strcpy(filename, argv[1]);
 
     file = fopen(filename, "r");
-//    if (file != NULL) {
-//        printf("File Opened\n");
-//    }
-    int no_proc;
-    int no_ticks;
-    int proc_id = 0;
-
-    fscanf(file, "%d", &no_ticks);
-    fscanf(file, "%d", &no_proc);
-
-    int *tau = (int *) malloc(no_proc * sizeof(int));
-    int *alpha = (int *) malloc(no_proc * sizeof(int));
-    int *proc[no_proc];
-
-    for (int i = 0; i < no_proc; i++) {
-        proc[i] = (int *) malloc(no_ticks * sizeof(int));
+    if (file == NULL) { // Check if file opened successfully
+        printf("Error opening file\n");
+    } else {
+        printf("File successfully opened\n");
     }
 
-    int *s_curr_proc = (int *) malloc(no_proc * sizeof(int));
-    int *s_proc_no = (int *) malloc(no_proc * sizeof(int));
-    int p_num = 0;
-    int *tau_time[no_proc];
+    // Read number of processes and ticks from file
+    int numProcesses;
+    int numTicks;
+    fscanf(file, "%d", &numTicks);
+    fscanf(file, "%d", &numProcesses);
 
-    for (int i = 0; i < no_proc; i++) {
-        tau_time[i] = (int *) malloc(no_ticks * sizeof(int));
+    // Allocate memory for arrays
+    int processId = 0;
+    int processNum = 0;
+    int *tau = (int *) malloc(numProcesses * sizeof(int));
+    int *alpha = (int *) malloc(numProcesses * sizeof(int));
+    int *proc[numProcesses];
+    int *currProcess = (int *) malloc(numProcesses * sizeof(int));
+    int *tau_time[numProcesses];
+    int *processNo = (int *) malloc(numProcesses * sizeof(int));
+
+    // Allocate memory for each process
+    for (int i = 0; i < numProcesses; i++) {
+        proc[i] = (int *) malloc(numTicks * sizeof(int));
+    }
+    // Allocate memory for tau_time array
+    for (int i = 0; i < numProcesses; i++) {
+        tau_time[i] = (int *) malloc(numTicks * sizeof(int));
     }
 
-    while (p_num < no_proc) {
+    // Read data from file for each process
+    while (processNum < numProcesses) {
         int cur_tau;
         float cur_alpha;
-        fscanf(file, "%d", &proc_id);
+        fscanf(file, "%d", &processId);
         fscanf(file, "%d", &cur_tau);
         fscanf(file, "%file", &cur_alpha);
-        tau[p_num] = cur_tau;
-        alpha[p_num] = cur_alpha;
+        tau[processNum] = cur_tau;
+        alpha[processNum] = cur_alpha;
 
-        for (int k = 0; k < no_ticks; k++) {
-
+        // Read process time for each tick
+        for (int i = 0; i < numTicks; i++) {
             int p_time;
             fscanf(file, "%d", &p_time);
-            proc[p_num][k] = p_time;
-            if (k == 0) {
-                tau_time[p_num][k] = cur_tau;
+            proc[processNum][i] = p_time;
+            // Calculate tau_time for each tick
+            if (i == 0) {
+                tau_time[processNum][i] = cur_tau;
             } else {
-                tau_time[p_num][k] = (cur_alpha * proc[p_num][k - 1] + ((1 - cur_alpha) * tau_time[p_num][k - 1]));
+                tau_time[processNum][i] = (cur_alpha * proc[processNum][i - 1] + ((1 - cur_alpha) * tau_time[processNum][i - 1]));
             }
         }
-        p_num++;
+        processNum++;
     }
 
-    int *proc1[no_proc];
-
-    for (int i = 0; i < no_proc; i++) {
-        proc1[i] = (int *) malloc(no_ticks * sizeof(int));
+    // Copy proc array to liveProc array
+    int *liveProc[numProcesses];
+    for (int i = 0; i < numProcesses; i++) {
+        liveProc[i] = (int *) malloc(numTicks * sizeof(int));
     }
-
-    for (int i = 0; i < no_proc; i++) {
-        for (int j = 0; j < no_ticks; j++) {
-            proc1[i][j] = proc[i][j];
+    for (int i = 0; i < numProcesses; i++) {
+        for (int j = 0; j < numTicks; j++) {
+            liveProc[i][j] = proc[i][j];
         }
     }
 
-    fclose(file);
+    fclose(file); // Close file
 
-    int l = 0;
-    int tot_time = 0;
-    int turn_time = 0;
-    int wait_time = 0;
+    // Variables to store total time, turnaround time, and wait time
+    int tot_time = 0, turn_time = 0, wait_time = 0;
 
     //Simulate the shortest job first.
     printf("--Shortest-Job-First--\n");
 
-    for (int l = 0; l < no_ticks; l++) {
+    for (int l = 0; l < numTicks; l++) {
 
         int tick_time = 0;
         printf("Simulating %dth round of process @ time %d: \n", l, tot_time);
 
-        for (int p = 0; p < no_proc; p++) {
+        for (int p = 0; p < numProcesses; p++) {
             int small = 999;
             int small_id = 0;
-            for (int q = 0; q < no_proc; q++) {
+            for (int q = 0; q < numProcesses; q++) {
                 if (small > proc[q][l]) {
                     small = proc[q][l];
                     small_id = q;
                 }
             }
 
-            s_curr_proc[p] = small;
-            s_proc_no[p] = small_id;
+            currProcess[p] = small;
+            processNo[p] = small_id;
             proc[small_id][l] = 999;
         }
 
-        for (int z = 0; z < no_proc; z++) {
-            printf(" Process %d took %d\n", s_proc_no[z], s_curr_proc[z]);
-            turn_time = turn_time + tick_time + s_curr_proc[z];
-            tot_time = tot_time + s_curr_proc[z];
+        for (int z = 0; z < numProcesses; z++) {
+            printf(" Process %d took %d\n", processNo[z], currProcess[z]);
+            turn_time = turn_time + tick_time + currProcess[z];
+            tot_time = tot_time + currProcess[z];
             wait_time = wait_time + tick_time;
-            tick_time = tick_time + s_curr_proc[z];
+            tick_time = tick_time + currProcess[z];
         }
     }
 
@@ -120,45 +123,45 @@ int main(int argc, char *argv[]) {
     wait_time = 0;
     int est_error = 0;
 
-//Simulate the shortest job live algorithm.
+    //Simulate the shortest job live algorithm.
 
+    int tick_time = 0; // Initialize the time for each tick
     printf("--Shortest-Job-First Live--\n");
 
-    for (int l = 0; l < no_ticks; l++) {
-        int tick_time = 0;
-        printf("Simulating %dth round of process @ time %d: \n", l, tot_time);
+    // Find the process with the shortest job remaining
+    for (int i = 0; i < numTicks; i++) {
+        printf("Simulating %dth round of process @ time %d: \n", i, tot_time);
+        int small = 999;
+        int small_id = 0;
+        for (int j = 0; j < numProcesses; j++) {
 
-        for (int p = 0; p < no_proc; p++) {
-            int small = 999;
-            int small_id = 0;
-
-            for (int q = 0; q < no_proc; q++) {
-                if (small > tau_time[q][l]) {
-                    small = tau_time[q][l];
-                    small_id = q;
+            for (int k = 0; k < numProcesses; k++) {
+                if (small > tau_time[k][i]) {
+                    small = tau_time[k][i];
+                    small_id = k;
                 }
             }
-            s_curr_proc[p] = small;
-            s_proc_no[p] = small_id;
-            tau_time[small_id][l] = 999;
+            currProcess[j] = small; // Store the current process time remaining
+            processNo[j] = small_id; // Store the current process id
+            tau_time[small_id][i] = 999; // Set the process time remaining for the current process to a very high value
         }
 
-        for (int z = 0; z < no_proc; z++) {
+        // Simulate each process and calculate relevant times, taking into account the estimation error
+        for (int z = 0; z < numProcesses; z++) {
+            printf(" Process %d was estimated for %d but took %d\n", processNo[z], currProcess[z],
+                   liveProc[processNo[z]][i]);
 
-            int cur_error = 0;
-            printf(" Process %d was estimated for %d but took %d\n", s_proc_no[z], s_curr_proc[z],
-                   proc1[s_proc_no[z]][l]);
-
-            if (proc1[s_proc_no[z]][l] > s_curr_proc[z]) {
-                cur_error = proc1[s_proc_no[z]][l] - s_curr_proc[z];
-            } else {
-                cur_error = s_curr_proc[z] - proc1[s_proc_no[z]][l];
-            }
-
-            turn_time = turn_time + tick_time + proc1[s_proc_no[z]][l];
-            tot_time = tot_time + proc1[s_proc_no[z]][l];
+            turn_time = turn_time + tick_time + liveProc[processNo[z]][i];
+            tot_time = tot_time + liveProc[processNo[z]][i];
             wait_time = wait_time + tick_time;
-            tick_time = tick_time + proc1[s_proc_no[z]][l];
+            tick_time = tick_time + liveProc[processNo[z]][i];
+
+            int cur_error = 0; // Initialize the estimation error for the current process
+            if (liveProc[processNo[z]][i] > currProcess[z]) {
+                cur_error = liveProc[processNo[z]][i] - currProcess[z];
+            } else {
+                cur_error = currProcess[z] - liveProc[processNo[z]][i];
+            }
             est_error = est_error + cur_error;
         }
     }
