@@ -5,10 +5,10 @@
 int main(int argc, char *argv[]) {
 
     FILE *file;
-    char filename[] = "D:\\Git\\SJF-scheduling\\sample\\data.txt"; // File to read data from
+//    char filename[] = "D:\\Git\\SJF-scheduling\\sample\\data.txt"; // File to read data from
 
-//    char filename[100]; // File to read data from
-//    strcpy(filename, argv[1]);
+    char filename[100]; // File to read data from
+    strcpy(filename, argv[1]);
 
     file = fopen(filename, "r");
     if (file == NULL) { // Check if file opened successfully
