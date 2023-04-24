@@ -1,3 +1,11 @@
+/**
+ * Shortest job first and Shortest job first live algorithms
+ *
+ * Completion Time: 15 hours
+ * @author Edgar Hakobyan
+ * @version 1.0
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
