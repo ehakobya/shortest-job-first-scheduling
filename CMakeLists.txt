@@ -3,4 +3,4 @@ project(SJF_scheduling C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(SJF_scheduling main.c)
+add_executable(SJF_scheduling HakobyanSJFL.c)
